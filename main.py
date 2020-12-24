@@ -2,11 +2,9 @@
 from PIL import Image
 import piexif
 import glob
-import pdb
 import logging
 import argparse, os
 import shutil
-from datetime import datetime
 from configparser import ConfigParser
 file = 'config.ini'
 config = ConfigParser()
@@ -19,7 +17,6 @@ def dir_path(string):
 def rotate_image(path):
     filename = os.path.basename(path)
     dst_dir = config['param']['path_backup']
-    src_dir = os.path.dirname(path)
     img = Image.open(path)
     if "exif" in img.info:
         exif_dict = piexif.load(img.info["exif"])
@@ -28,7 +25,6 @@ def rotate_image(path):
             if(orientation != 1):
                 shutil.copy(path, dst_dir)
                 logging.info(filename)
-            #pdb.set_trace()
             exif_bytes = piexif.dump(exif_dict)
             if orientation == 2:
                 img = img.transpose(Image.FLIP_LEFT_RIGHT)
@@ -46,7 +42,13 @@ def rotate_image(path):
                 img = img.rotate(90, expand=True)
             img.save(path, exif=exif_bytes)
 def main():
-    #logging.basicConfig(filename = f"{datetime.strftime(datetime.now(), '%Y-%m-%d')}.log", filemode='w',level=logging.INFO)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="{asctime} {levelname:<8} {message}",
+        style='{',
+        filename='%slog' % __file__[:-2],
+        filemode='a'
+    )
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--path', type=dir_path)
@@ -56,7 +58,6 @@ def main():
         for y in glob.glob(os.path.join(x[0], '*')):
             if os.path.isfile(y):
                 result.append(y)
-    #pdb.set_trace()
     i = 0
     for i in range(len(result)):
         path = result[i]
